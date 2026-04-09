@@ -35,15 +35,19 @@ class GameScreenTest {
                         ),
                         canAnswer = true,
                         canReplay = true,
+                        canPreviewChoices = true,
                     ),
                     onPlayNote = {},
                     onReplayNote = {},
+                    onPreviewNote = {},
                     onAnswerSelected = {},
                     onDismissUnlockDialog = {},
                 )
             }
         }
 
+        composeRule.onNodeWithTag("practice_preview_card").assertIsDisplayed()
+        composeRule.onNodeWithTag("preview_C4").assertIsDisplayed()
         composeRule.onNodeWithTag("answer_C4").assertIsDisplayed()
         composeRule.onNodeWithTag("answer_D4").assertIsDisplayed()
         composeRule.onNodeWithTag("answer_E4").assertIsDisplayed()
@@ -64,6 +68,7 @@ class GameScreenTest {
                     ),
                     onPlayNote = {},
                     onReplayNote = {},
+                    onPreviewNote = {},
                     onAnswerSelected = {},
                     onDismissUnlockDialog = {},
                 )
@@ -73,5 +78,32 @@ class GameScreenTest {
         composeRule.onNodeWithTag("unlock_dialog").assertIsDisplayed()
         composeRule.onNodeWithText("New Note Unlocked").assertIsDisplayed()
         composeRule.onNodeWithText("Keep Training").assertIsDisplayed()
+    }
+
+    @Test
+    fun retiredPreviewMessageAppearsAfterHelperIsRemoved() {
+        composeRule.setContent {
+            NoteGuessTrainerTheme {
+                GameScreen(
+                    uiState = GameUiState(
+                        currentRoundNote = NoteId.C4,
+                        unlockedNotes = listOf(NoteId.C4, NoteId.D4),
+                        practicePreviewEnabled = false,
+                        canAnswer = true,
+                        canReplay = true,
+                    ),
+                    onPlayNote = {},
+                    onReplayNote = {},
+                    onPreviewNote = {},
+                    onAnswerSelected = {},
+                    onDismissUnlockDialog = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("practice_preview_retired").assertIsDisplayed()
+        composeRule.onNodeWithText(
+            "Practice preview has been removed after 6 correct answers. You are now playing by ear only.",
+        ).assertIsDisplayed()
     }
 }

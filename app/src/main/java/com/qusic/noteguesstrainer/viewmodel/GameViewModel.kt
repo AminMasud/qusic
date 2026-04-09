@@ -27,6 +27,8 @@ data class GameUiState(
     val bestStreak: Int = 0,
     val totalGuesses: Int = 0,
     val accuracyPercent: Int = 0,
+    val practicePreviewEnabled: Boolean = true,
+    val practicePreviewRemainingCorrectAnswers: Int = NoteCatalog.practicePreviewCorrectLimit,
     val nextUnlock: NoteId? = NoteCatalog.nextUnlock(NoteCatalog.initialUnlocked),
     val unlockedRange: String = NoteCatalog.displayRange(NoteCatalog.initialUnlocked),
     val progressToUnlock: Float = 0f,
@@ -41,6 +43,7 @@ data class GameUiState(
     val remainingReplays: Int? = null,
     val canAnswer: Boolean = false,
     val canReplay: Boolean = false,
+    val canPreviewChoices: Boolean = false,
 )
 
 private data class GameTransientState(
@@ -70,6 +73,7 @@ class GameViewModel(
         } else {
             (NoteCatalog.limitedReplayCount - transient.replayCount).coerceAtLeast(0)
         }
+        val practicePreviewEnabled = NoteCatalog.isPracticePreviewEnabled(snapshot.stats.correctGuesses)
 
         GameUiState(
             isLoading = false,
@@ -79,6 +83,10 @@ class GameViewModel(
             bestStreak = snapshot.stats.bestStreak,
             totalGuesses = snapshot.stats.totalGuesses,
             accuracyPercent = snapshot.stats.accuracyPercent,
+            practicePreviewEnabled = practicePreviewEnabled,
+            practicePreviewRemainingCorrectAnswers = NoteCatalog.remainingPracticePreviewCorrectAnswers(
+                snapshot.stats.correctGuesses,
+            ),
             nextUnlock = NoteCatalog.nextUnlock(snapshot.progress.unlockedNotes),
             unlockedRange = NoteCatalog.displayRange(snapshot.progress.unlockedNotes),
             progressToUnlock = (
@@ -99,6 +107,10 @@ class GameViewModel(
                 !transient.isBusy,
             canReplay = snapshot.progress.currentRoundNote != null &&
                 (snapshot.settings.unlimitedReplay || transient.replayCount < NoteCatalog.limitedReplayCount),
+            canPreviewChoices = practicePreviewEnabled &&
+                snapshot.progress.currentRoundNote != null &&
+                transient.feedback == null &&
+                !transient.isBusy,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -147,6 +159,14 @@ class GameViewModel(
             transientState.update { current ->
                 current.copy(replayCount = current.replayCount + 1)
             }
+        }
+        playNote(note, state.volume)
+    }
+
+    fun previewChoiceNote(note: NoteId) {
+        val state = uiState.value
+        if (!state.canPreviewChoices) {
+            return
         }
         playNote(note, state.volume)
     }
@@ -216,12 +236,17 @@ class GameViewModel(
 
     private fun com.qusic.noteguesstrainer.model.AnswerResult.toFeedback(): RoundFeedback {
         return if (isCorrect) {
+            val messageParts = buildList {
+                add("Correct!")
+                if (unlockedNote != null) {
+                    add("${unlockedNote.fullLabel()} is now unlocked.")
+                }
+                if (practicePreviewRemoved) {
+                    add("Practice preview is now off. You will guess by ear only from here.")
+                }
+            }
             RoundFeedback(
-                message = if (unlockedNote != null) {
-                    "Correct! ${unlockedNote.fullLabel()} is now unlocked."
-                } else {
-                    "Correct!"
-                },
+                message = messageParts.joinToString(separator = " "),
                 isCorrect = true,
                 correctAnswer = correctAnswer,
                 unlockedNote = unlockedNote,

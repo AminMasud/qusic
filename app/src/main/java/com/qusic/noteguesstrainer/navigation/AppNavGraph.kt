@@ -83,6 +83,7 @@ fun AppNavGraph(
                     uiState = gameState,
                     onPlayNote = gameViewModel::replayCurrentNote,
                     onReplayNote = gameViewModel::replayCurrentNote,
+                    onPreviewNote = gameViewModel::previewChoiceNote,
                     onAnswerSelected = gameViewModel::submitAnswer,
                     onDismissUnlockDialog = gameViewModel::dismissUnlockDialog,
                 )

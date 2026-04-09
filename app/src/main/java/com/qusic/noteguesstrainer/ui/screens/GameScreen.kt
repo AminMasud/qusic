@@ -45,6 +45,7 @@ fun GameScreen(
     uiState: GameUiState,
     onPlayNote: () -> Unit,
     onReplayNote: () -> Unit,
+    onPreviewNote: (NoteId) -> Unit,
     onAnswerSelected: (NoteId) -> Unit,
     onDismissUnlockDialog: () -> Unit,
 ) {
@@ -168,6 +169,65 @@ fun GameScreen(
                     modifier = Modifier.padding(16.dp),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
+                )
+            }
+        }
+
+        if (uiState.practicePreviewEnabled) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("practice_preview_card"),
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text(
+                        text = "Practice preview",
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                    Text(
+                        text = "Tap a note to hear its sound. This helper disappears after ${NoteCatalog.practicePreviewCorrectLimit} correct answers.",
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    Text(
+                        text = "${uiState.practicePreviewRemainingCorrectAnswers} correct answer(s) left before preview is removed.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        uiState.unlockedNotes.forEach { note ->
+                            OutlinedButton(
+                                onClick = { onPreviewNote(note) },
+                                enabled = uiState.canPreviewChoices,
+                                modifier = Modifier
+                                    .widthIn(min = 112.dp)
+                                    .testTag("preview_${note.name}"),
+                            ) {
+                                Text(note.displayLabel(uiState.labelMode, uiState.forceOctaveLabels))
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("practice_preview_retired"),
+                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f),
+                shape = MaterialTheme.shapes.large,
+            ) {
+                Text(
+                    text = "Practice preview has been removed after 6 correct answers. You are now playing by ear only.",
+                    modifier = Modifier.padding(16.dp),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
                 )
             }
         }

@@ -57,5 +57,6 @@ data class AnswerResult(
     val isCorrect: Boolean,
     val correctAnswer: NoteId,
     val unlockedNote: NoteId? = null,
+    val practicePreviewRemoved: Boolean = false,
     val nextRoundNote: NoteId,
 )

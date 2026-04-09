@@ -6,6 +6,7 @@ import com.qusic.noteguesstrainer.model.fullLabel
 
 object NoteCatalog {
     const val unlockTargetStreak = 10
+    const val practicePreviewCorrectLimit = 6
     const val limitedReplayCount = 3
 
     val progressionOrder: List<NoteId> = NoteId.entries
@@ -13,6 +14,14 @@ object NoteCatalog {
 
     fun nextUnlock(unlockedNotes: List<NoteId>): NoteId? {
         return progressionOrder.firstOrNull { note -> note !in unlockedNotes }
+    }
+
+    fun isPracticePreviewEnabled(correctGuesses: Int): Boolean {
+        return correctGuesses < practicePreviewCorrectLimit
+    }
+
+    fun remainingPracticePreviewCorrectAnswers(correctGuesses: Int): Int {
+        return (practicePreviewCorrectLimit - correctGuesses).coerceAtLeast(0)
     }
 
     fun normalizeUnlocked(rawIds: Set<String>): List<NoteId> {

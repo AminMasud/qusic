@@ -36,11 +36,15 @@ class GameEngine(
 
         val isCorrect = selectedNote == currentNote
         val streakBeforeUnlock = if (isCorrect) snapshot.progress.currentStreak + 1 else 0
+        val updatedCorrectGuesses = snapshot.stats.correctGuesses + if (isCorrect) 1 else 0
         val unlockedNote = if (isCorrect && streakBeforeUnlock == NoteCatalog.unlockTargetStreak) {
             NoteCatalog.nextUnlock(snapshot.progress.unlockedNotes)
         } else {
             null
         }
+        val practicePreviewRemoved = isCorrect &&
+            NoteCatalog.isPracticePreviewEnabled(snapshot.stats.correctGuesses) &&
+            !NoteCatalog.isPracticePreviewEnabled(updatedCorrectGuesses)
         val updatedUnlockedNotes = if (unlockedNote != null) {
             snapshot.progress.unlockedNotes + unlockedNote
         } else {
@@ -53,7 +57,7 @@ class GameEngine(
         }
         val updatedStats = snapshot.stats.copy(
             totalGuesses = snapshot.stats.totalGuesses + 1,
-            correctGuesses = snapshot.stats.correctGuesses + if (isCorrect) 1 else 0,
+            correctGuesses = updatedCorrectGuesses,
             wrongGuesses = snapshot.stats.wrongGuesses + if (isCorrect) 0 else 1,
             bestStreak = maxOf(snapshot.stats.bestStreak, streakBeforeUnlock),
         )
@@ -71,6 +75,7 @@ class GameEngine(
             isCorrect = isCorrect,
             correctAnswer = currentNote,
             unlockedNote = unlockedNote,
+            practicePreviewRemoved = practicePreviewRemoved,
             nextRoundNote = nextRoundNote,
         )
     }

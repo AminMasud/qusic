@@ -78,6 +78,24 @@ class GameEngineTest {
     }
 
     @Test
+    fun sixthCorrectAnswerRemovesPracticePreview() {
+        val snapshot = AppSnapshot(
+            progress = AppProgress(
+                unlockedNotes = NoteCatalog.initialUnlocked,
+                currentStreak = 5,
+                currentRoundNote = NoteId.C4,
+            ),
+            stats = AppStats(totalGuesses = 7, correctGuesses = 5, wrongGuesses = 2, bestStreak = 5),
+        )
+
+        val result = engine.answer(snapshot, selectedNote = NoteId.C4, playedAtEpochMillis = 10L)
+
+        assertTrue(result.isCorrect)
+        assertTrue(result.practicePreviewRemoved)
+        assertEquals(6, result.snapshot.stats.correctGuesses)
+    }
+
+    @Test
     fun roundGenerationOnlyUsesUnlockedNotesAndAvoidsImmediateRepeat() {
         val unlocked = listOf(NoteId.C4, NoteId.D4, NoteId.E4)
 
